@@ -46,10 +46,10 @@ export default function SignupPage() {
     <main className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Sign Up</CardTitle>
+          <CardTitle className="font-serif text-center">Sign Up</CardTitle>
         </CardHeader>
 
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 ">
           <input
             className="w-full border p-2 rounded"
             placeholder="Email"

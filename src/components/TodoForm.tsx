@@ -39,7 +39,8 @@ export default function TodoForm({ userId }:TodoFormProps) {
   }
 
   return (
-    <div className="flex flex-col gap-2 sm:flex-row sm:items-center ">
+  <div className="border rounded-lg p-4 shadow-sm w-full max-w-lg mb-3">
+    <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
       <Input
         placeholder="Add a new todo..."
         value={title}
@@ -49,10 +50,12 @@ export default function TodoForm({ userId }:TodoFormProps) {
 
       <Button
         onClick={onSubmit}
-        className="w-full sm:w-auto mb-3"
+        className="w-full sm:w-auto hover:bg-red-400"
       >
         Add
       </Button>
     </div>
-  );
+  </div>
+);
+
 }

@@ -86,18 +86,29 @@ const page = () => {
 
 
 
-  return (
-    <div >
+    return (
+    
         <main className="mx-auto max-w-sm p-3 sm:max-w-md sm:p-4 md:max-w-lg">
-            <div className='flex-col items-center justify-center border-3  p-2 rounded shadow '>
-            <div className='flex items-end justify-end'>
-                <ModeToggle />
-            </div>
-            <h1 className='text-2xl font-serif text-center mb-4'>To-Do-List</h1>
-            
-            <Button variant="destructive" size="sm" onClick={handleLogout} className="w-full sm:w-auto sm:ml-auto mb-4 bg-cyan-700  ">
-                Logout
-            </Button>
+            <div className="border-2 p-4 rounded shadow">
+                <div className="relative flex flex-col sm:flex-row sm:items-center mb-4 gap-2">
+      
+                    {/* Heading */}
+                    <h1 className="text-2xl font-serif text-center sm:absolute sm:left-1/2 sm:-translate-x-1/2">
+                        To-Do-List
+                    </h1>
+
+                    {/* Logout button */}
+                    <Button
+                        variant="default"
+                        size="sm"
+                        onClick={handleLogout}
+                        className="w-full sm:w-auto sm:ml-auto bg-cyan-700"
+                    >
+                        Logout
+                    </Button>
+
+                </div>
+
             
             <TodoForm  userId={user.uid}/>
             
@@ -137,11 +148,11 @@ const page = () => {
                     </div>
                 ))}
             </div>
-            </div>
             
+            </div>
         </main>
-    </div>
-  )
+    
+    )
 }
 
 export default page

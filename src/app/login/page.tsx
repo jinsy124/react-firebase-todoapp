@@ -43,12 +43,12 @@ export default function LoginPage() {
 
   return (
     <main className="flex min-h-screen items-center justify-center p-4">
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md sm:max-w-lg">
         <CardHeader>
-          <CardTitle>Login</CardTitle>
+          <CardTitle className="font-serif text-center">Login</CardTitle>
         </CardHeader>
 
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 px-2 sm:px-4">
           <input
             className="w-full border p-2 rounded"
             placeholder="Email"
@@ -66,7 +66,7 @@ export default function LoginPage() {
             <p className="text-sm text-red-500">{error}</p>
           )}
 
-          <Button className="w-full" onClick={handleLogin}>
+          <Button className="w-full " onClick={handleLogin}>
             Login
           </Button>
 

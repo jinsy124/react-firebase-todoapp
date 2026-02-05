@@ -53,6 +53,7 @@ const page = () => {
 
     const handleLogout = async () => {
         await signOut(auth);
+        router.push("/login");
     };
 
 
@@ -140,7 +141,7 @@ const page = () => {
                             </span>
                         </div>
                         <Button variant="destructive" size="sm" 
-                            className="w-full sm:w-auto bg-green-700"
+                            className="w-full sm:w-auto hover:bg-green-700"
                             onClick={() => deleteTodo(todo.id)}>
                                 Delete 
 

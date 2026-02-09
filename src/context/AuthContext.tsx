@@ -1,11 +1,11 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { User, onAuthStateChanged } from "firebase/auth";
-import { auth } from "@/app/lib/firebase";
+import { account } from "@/lib/appwrite";
+import { Models } from "appwrite";
 
 type AuthContextType = {
-  user: User | null;
+  user: Models.User<Models.Preferences> | null;
   loading: boolean;
 };
 
@@ -15,16 +15,22 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<Models.User<Models.Preferences> | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (user) => {
-      setUser(user);
-      setLoading(false);
-    });
+    const checkSession = async () => {
+      try {
+        const session = await account.get();
+        setUser(session);
+      } catch (error) {
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    return () => unsub();
+    checkSession();
   }, []);
 
   return (

@@ -1,22 +1,18 @@
 "use client"
 import TodoForm from '@/components/TodoForm'
 import React, { useEffect, useState } from 'react'
-import { db } from "@/app/lib/firebase";
-import { getDocs , collection ,onSnapshot ,deleteDoc,doc ,updateDoc,query,where,} from "firebase/firestore";
+import { account, databases, DATABASE_ID, TODOS_COLLECTION_ID, Query } from "@/lib/appwrite";
 import { Button } from '@/components/ui/button';
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
-import { signOut } from "firebase/auth";
-import { auth } from "@/app/lib/firebase";
 import { ModeToggle } from '@/components/ModeToggle';
 
 
 type Todo = {
-    id: string;
+    $id: string;
     title: string;
     completed: boolean;
     userId: string;
-    
 };
 
 const page = () => {
@@ -34,36 +30,37 @@ const page = () => {
     useEffect(() => {
         if (!user) return;
 
-        const q = query(
-        collection(db, "todos"),
-        where("userId", "==", user.uid)
-        );
+        const fetchTodos = async () => {
+            try {
+                const response = await databases.listDocuments(
+                    DATABASE_ID,
+                    TODOS_COLLECTION_ID,
+                    [Query.equal("userId", user.$id)]
+                );
+                setTodoList(response.documents as Todo[]);
+            } catch (err) {
+                console.error("Error fetching todos:", err);
+            }
+        };
 
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-        const todos = snapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...(doc.data() as Omit<Todo, "id">),
-        }));
-
-        setTodoList(todos);
-        });
-
-        return () => unsubscribe();
+        fetchTodos();
     }, [user]);
 
     const handleLogout = async () => {
-        await signOut(auth);
-        router.push("/login");
+        try {
+            await account.deleteSession("current");
+            router.push("/login");
+        } catch (err) {
+            console.error("Error logging out:", err);
+        }
     };
 
 
     const deleteTodo = async (id: string) => {
         try {
-            const todoDoc = doc(db, "todos", id);
-            await deleteDoc(todoDoc);
-
-            // Update UI without refetching
-            
+            await databases.deleteDocument(DATABASE_ID, TODOS_COLLECTION_ID, id);
+            // Update UI
+            setTodoList(todoList.filter(todo => todo.$id !== id));
         } catch (err) {
             console.error("Error deleting todo:", err);
         }
@@ -71,13 +68,13 @@ const page = () => {
 
     const toggleTodoStatus = async (id: string, completed: boolean) => {
         try {
-            const todoDoc = doc(db, "todos", id);
-
-            await updateDoc(todoDoc, {
-            completed: !completed,
+            await databases.updateDocument(DATABASE_ID, TODOS_COLLECTION_ID, id, {
+                completed: !completed,
             });
-
-            
+            // Update UI
+            setTodoList(todoList.map(todo => 
+                todo.$id === id ? { ...todo, completed: !completed } : todo
+            ));
         } catch (err) {
             console.error("Error updating status:", err);
         }
@@ -111,14 +108,14 @@ const page = () => {
                 </div>
 
             
-            <TodoForm  userId={user.uid}/>
+            <TodoForm  userId={user.$id}/>
             
             
             <div className='text-center space-y-3 '>
                 {todoList
                     .sort((a, b) => Number(a.completed) - Number(b.completed))
                     .map((todo) =>(
-                    <div key={todo.id} 
+                    <div key={todo.$id} 
                     className="
                         border rounded p-3
                         flex flex-col gap-3
@@ -129,7 +126,7 @@ const page = () => {
                             <input
                                 type="checkbox"
                                 checked={todo.completed}
-                                onChange={() => toggleTodoStatus(todo.id, todo.completed)}
+                                onChange={() => toggleTodoStatus(todo.$id, todo.completed)}
                                 className="h-4 w-4 cursor-pointer"
                             />
                             <span
@@ -142,7 +139,7 @@ const page = () => {
                         </div>
                         <Button variant="destructive" size="sm" 
                             className="w-full sm:w-auto hover:bg-green-700"
-                            onClick={() => deleteTodo(todo.id)}>
+                            onClick={() => deleteTodo(todo.$id)}>
                                 Delete 
 
                         </Button>

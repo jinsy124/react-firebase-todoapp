@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "@/app/lib/firebase";
+import { account } from "@/lib/appwrite";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -21,19 +20,14 @@ export default function LoginPage() {
 
   const handleLogin = async () => {
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      await account.createEmailPasswordSession(email, password);
       router.push("/todos");
     } catch (err: any) {
-      const code = err.code;
+      const message = err.message || err;
 
-      if (
-        code === "auth/user-not-found" ||
-        code === "auth/invalid-credential"
-      ) {
-        setError("Account not found. Please sign up first.");
-      } else if (code === "auth/invalid-credential") {
-        setError("Incorrect password. Please try again.");
-      } else if (code === "auth/invalid-email") {
+      if (message.includes("not found") || message.includes("invalid")) {
+        setError("Account not found or password incorrect. Please check your credentials.");
+      } else if (message.includes("email")) {
         setError("Please enter a valid email address.");
       } else {
         setError("Login failed. Please try again.");

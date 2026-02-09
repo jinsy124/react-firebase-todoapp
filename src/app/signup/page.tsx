@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { auth } from "@/app/lib/firebase";
+import { account } from "@/lib/appwrite";
+import { ID } from "appwrite";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -21,24 +21,18 @@ export default function SignupPage() {
 
   const handleSignup = async () => {
     try {
-      await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
+      await account.create(ID.unique(), email, password);
+      // Log in the user after signup
+      await account.createEmailPasswordSession(email, password);
       router.push("/todos");
     } catch (err: any) {
-      const code = err.code;
+      const message = err.message || err;
 
-      if (code === "auth/email-already-in-use") {
+      if (message.includes("already in use") || message.includes("email")) {
         setError("This email is already registered. Please log in.");
-      } else if (code === "auth/invalid-email") {
-        setError("Please enter a valid email address.");
-      }  else {
+      } else {
         setError("Sign up failed. Please try again.");
       }
-
-
     }
   };
 

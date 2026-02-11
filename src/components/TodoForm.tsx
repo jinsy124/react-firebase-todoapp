@@ -4,13 +4,14 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { databases, DATABASE_ID, TODOS_COLLECTION_ID } from "@/lib/appwrite";
-import { ID } from "appwrite";
+import { ID, Permission } from "appwrite";
 
 type TodoFormProps = {
   userId: string;
+  onTodoAdded: () => void;
 };
 
-export default function TodoForm({ userId }: TodoFormProps) {
+export default function TodoForm({ userId, onTodoAdded }: TodoFormProps) {
   const [title, setTitle] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -20,7 +21,7 @@ export default function TodoForm({ userId }: TodoFormProps) {
         alert("Please add a title");
         return;
       }
-
+      console.log("Submitting new todo:", title, "for userId:", userId);
       setLoading(true);
       await databases.createDocument(
         DATABASE_ID,
@@ -31,10 +32,18 @@ export default function TodoForm({ userId }: TodoFormProps) {
           completed: false,
           userId: userId,
           createdAt: new Date().toISOString(),
-        }
+        },
+        [
+          Permission.read(`user:${userId}`),
+          Permission.update(`user:${userId}`),
+          Permission.delete(`user:${userId}`)
+        ]
+              
+
       );
 
       setTitle("");
+      onTodoAdded(); // this updates ui instantly
     } catch (err) {
       console.error(err);
       alert("Failed to add todo. Please check your Appwrite configuration.");
@@ -44,8 +53,7 @@ export default function TodoForm({ userId }: TodoFormProps) {
   };
 
   if (!userId) {
-    alert("User not authenticated");
-    return;
+    return null;
   }
 
   return (

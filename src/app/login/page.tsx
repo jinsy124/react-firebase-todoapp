@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { account } from "@/lib/appwrite";
+import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -14,16 +15,33 @@ import Link from "next/link";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { reloadUser } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
   const handleLogin = async () => {
     try {
+      if (!email.trim() || !password.trim()) {
+        setError("Email and password are required.");
+        return;
+      }
+      // Delete any existing session before logging in
+      try {
+        await account.deleteSession("current");
+      } catch {
+        // No active session, continue
+      }
+      
       await account.createEmailPasswordSession(email, password);
+      // Ensure user state is updated before redirecting
+      await reloadUser();
+      console.log("Login successful, redirecting to /todos...");
+      
       router.push("/todos");
     } catch (err: any) {
       const message = err.message || err;
+      console.error("Login error:", err);
 
       if (message.includes("not found") || message.includes("invalid")) {
         setError("Account not found or password incorrect. Please check your credentials.");
@@ -46,6 +64,7 @@ export default function LoginPage() {
           <input
             className="w-full border p-2 rounded"
             placeholder="Email"
+            value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
 
@@ -53,6 +72,7 @@ export default function LoginPage() {
             type="password"
             className="w-full border p-2 rounded"
             placeholder="Password"
+            value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
 
@@ -75,3 +95,7 @@ export default function LoginPage() {
     </main>
   );
 }
+function reloadUser() {
+  throw new Error("Function not implemented.");
+}
+

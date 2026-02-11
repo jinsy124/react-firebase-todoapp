@@ -1,6 +1,2 @@
-export const db ="to-do-app"
-export const questionCollection = "questions"
-export const answerCollection = "answers"
-export const commentCollection = "comments"
-export const voteCollection = "votes"
-export const questioinAttachmentBucket = "question-attachments"
+export const db = "to-do-app"
+export const todosCollection = "todos"

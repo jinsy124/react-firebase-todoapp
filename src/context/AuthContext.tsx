@@ -7,34 +7,42 @@ import { Models } from "appwrite";
 type AuthContextType = {
   user: Models.User<Models.Preferences> | null;
   loading: boolean;
+  reloadUser: () => Promise<void>;
+  
 };
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
+  reloadUser: async () => {},
+  
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<Models.User<Models.Preferences> | null>(null);
+  const [user, setUser] =
+    useState<Models.User<Models.Preferences> | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const checkSession = async () => {
-      try {
-        const session = await account.get();
-        setUser(session);
-      } catch (error) {
-        setUser(null);
-      } finally {
-        setLoading(false);
-      }
-    };
+  // 🔥 THIS WAS MISSING
+  const loadUser = async () => {
+    setLoading(true);
+    try {
+      const currentUser = await account.get();
+      setUser(currentUser);
+    } catch {
+      setUser(null); // 👈 logout detected here
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    checkSession();
+  // 🔥 runs once when app loads
+  useEffect(() => {
+    loadUser();
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading }}>
+    <AuthContext.Provider value={{ user, loading, reloadUser: loadUser }}>
       {children}
     </AuthContext.Provider>
   );

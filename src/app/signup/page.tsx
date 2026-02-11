@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { account } from "@/lib/appwrite";
 import { ID } from "appwrite";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/context/AuthContext";
 import {
   Card,
   CardContent,
@@ -15,18 +16,36 @@ import Link from "next/link";
 
 export default function SignupPage() {
   const router = useRouter();
+  const { reloadUser } = useAuth();
+  const [name, setName] = useState("");
+  
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
   const handleSignup = async () => {
     try {
-      await account.create(ID.unique(), email, password);
+      if (!name.trim() || !email.trim() || !password.trim()) {
+        setError("All fields are required.");
+        return;
+      }
+      // Delete any existing session before creating a new account
+      try {
+        await account.deleteSession("current");
+      } catch {
+        // No active session, continue
+      }
+      
+      await account.create(ID.unique(), email, password, name);
       // Log in the user after signup
       await account.createEmailPasswordSession(email, password);
+      await reloadUser();
+      console.log("Signup and login successful, redirecting to /todos...");
+      
       router.push("/todos");
     } catch (err: any) {
       const message = err.message || err;
+      console.error("Signup error:", err);
 
       if (message.includes("already in use") || message.includes("email")) {
         setError("This email is already registered. Please log in.");
@@ -46,7 +65,15 @@ export default function SignupPage() {
         <CardContent className="space-y-4 ">
           <input
             className="w-full border p-2 rounded"
+            placeholder="Full Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+
+          <input
+            className="w-full border p-2 rounded"
             placeholder="Email"
+            value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
 
@@ -54,6 +81,7 @@ export default function SignupPage() {
             type="password"
             className="w-full border p-2 rounded"
             placeholder="Password"
+            value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
 

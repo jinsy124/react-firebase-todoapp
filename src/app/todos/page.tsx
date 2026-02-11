@@ -17,39 +17,64 @@ type Todo = {
 
 const page = () => {
 
-    const { user, loading } = useAuth();
+    const { user, loading, reloadUser } = useAuth();
     const router = useRouter();
     const [todoList, setTodoList] = useState<Todo[]>([]);
     
     useEffect(() => {
+        console.log("Todos page - loading:", loading, "user:", user);
         if (!loading && !user) {
-        router.push("/login");
+            console.log("No user found, redirecting to login");
+            router.replace("/login");
         }
     }, [user, loading, router]);
 
+    
+        
+    const fetchTodos = async () => {
+        if (!user) {
+            console.log("No user, skipping todo fetch");
+            return;
+        }
+
+        try {
+            console.log("Fetching todos for user:", user.$id);
+            console.log("DATABASE_ID:", DATABASE_ID, "TODOS_COLLECTION_ID:", TODOS_COLLECTION_ID);
+            const response = await databases.listDocuments(
+                DATABASE_ID,
+                TODOS_COLLECTION_ID,
+                [Query.equal("userId", user.$id)]
+            );
+            console.log("Fetched todos:", response.documents);
+            setTodoList(response.documents as any  as Todo[]);
+        } catch (err) {
+            console.error("Error fetching todos:", err);
+        }
+    };
+
     useEffect(() => {
-        if (!user) return;
+        if (!user && !loading) {
+        setTodoList([]); // 🔥 clear old data
+        router.replace("/login");
+        return;
+        }
 
-        const fetchTodos = async () => {
-            try {
-                const response = await databases.listDocuments(
-                    DATABASE_ID,
-                    TODOS_COLLECTION_ID,
-                    [Query.equal("userId", user.$id)]
-                );
-                setTodoList(response.documents as Todo[]);
-            } catch (err) {
-                console.error("Error fetching todos:", err);
-            }
-        };
-
+        if (user) {
         fetchTodos();
-    }, [user]);
+        }
+    }, [user?.$id, loading]);
+
+
+    
 
     const handleLogout = async () => {
         try {
             await account.deleteSession("current");
-            router.push("/login");
+            await reloadUser();
+            setTodoList([]);
+            console.log("Logout successful, redirecting to /login...");
+            router.replace("/login");
+            
         } catch (err) {
             console.error("Error logging out:", err);
         }
@@ -108,7 +133,7 @@ const page = () => {
                 </div>
 
             
-            <TodoForm  userId={user.$id}/>
+            <TodoForm  userId={user.$id} onTodoAdded={fetchTodos}/>
             
             
             <div className='text-center space-y-3 '>
@@ -154,3 +179,7 @@ const page = () => {
 }
 
 export default page
+function reloadUser() {
+    throw new Error('Function not implemented.');
+}
+

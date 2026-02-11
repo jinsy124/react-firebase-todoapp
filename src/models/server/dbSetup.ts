@@ -1,8 +1,5 @@
 import { db } from "../name";
-import createQuestionCollection from "./question.collection";
-import createAnswerCollection from "./answer.collection";
-import createCommentCollection from "./comment.collection";
-import createVoteCollection from "./vote.collection";
+import createTodoCollection from "./todo.collection";
 
 import { databases } from "./config";
 
@@ -16,10 +13,7 @@ export default async function getOrCreateDB() {
         console.log("Database is created");
         // create collections
         await Promise.all([
-            createQuestionCollection(),
-            createAnswerCollection(),
-            createCommentCollection(),
-            createVoteCollection(),
+          createTodoCollection(),
         ])
         console.log("Collection created successfully");
         console.log("Database connected successfully");
